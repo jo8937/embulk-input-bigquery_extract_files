@@ -133,7 +133,7 @@ public class BigqueryExportUtils
 		log.info("query to Table jobId : {}",jobId);
 		log.info("waiting for job end....... ");
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId);
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
 		
 		log.debug("waiting for job end....... {}", lastJob.toPrettyString());
 	}
@@ -301,25 +301,31 @@ public class BigqueryExportUtils
 		log.info("extract jobId : {}",jobId);
 		log.debug("waiting for job end....... ");
 		
-		waitForJob(bigquery, task.getProject(), jobId);
+		waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
 		return embulkSchema;
     }
 
-    public static Job waitForJob(Bigquery bigquery, String project, String jobId) throws IOException, InterruptedException{
-    	int maxAttempts = 20;
+    public static Job waitForJob(Bigquery bigquery, String project, String jobId, int bigqueryJobWaitingSecond) throws IOException, InterruptedException{
+    	int maxAttempts = bigqueryJobWaitingSecond;
 		int initialRetryDelay = 1000; // ms
 		Job pollingJob = null;	
-        for (int i=0; i < maxAttempts; i++){
+		log.info("waiting for job end : {}",jobId);
+		int tryCnt = 0;
+        for (tryCnt=0; tryCnt < maxAttempts; tryCnt++){
             pollingJob = bigquery.jobs().get(project, jobId).execute();
             String state = pollingJob.getStatus().getState();
             log.debug("Job Status {} : {}",jobId, state);
+            
             if (pollingJob.getStatus().getState().equals("DONE")) {
                 break;
             }
-            log.debug("wait 1 second and waiting for end ...");
+            log.info("waiting {} ... ",tryCnt);
             Thread.sleep(initialRetryDelay);
-            
         }
+        if(tryCnt + 1 == maxAttempts){
+        	log.error("Bigquery Job Waiting exceed : over {} second...", bigqueryJobWaitingSecond);
+        }
+        
         return pollingJob;
     }
     

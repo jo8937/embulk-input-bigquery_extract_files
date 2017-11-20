@@ -116,10 +116,13 @@ public class BigqueryExportGcsFileInputPlugin
         @ConfigDefault("null")
         public Optional<String> getTempSchemaFilePath();
         
-        @Config("temp_schema_file_tpye")
+        @Config("temp_schema_file_type")
         @ConfigDefault("null")
         public Optional<String> getTempSchemaFileType();
         
+        @Config("bigquery_job_wait_second")
+        @ConfigDefault("600")
+        public Optional<Integer> getBigqueryJobWaitingSecond();
         
         @Config("cleanup_gcs_files")
         @ConfigDefault("false")
