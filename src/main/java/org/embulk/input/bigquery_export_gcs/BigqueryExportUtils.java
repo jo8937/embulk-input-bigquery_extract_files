@@ -106,7 +106,7 @@ public class BigqueryExportUtils
 
     public static void executeQueryToDestinationWorkTable(Bigquery bigquery, PluginTask task) throws IOException, InterruptedException {
 
-		log.info("extract query result {} : {} => {}.{} ",task.getDataset(), task.getQuery().get(), task.getWorkDataset(), task.getWorkTable());
+		log.info("extract query result {} => {}.{} ",task.getQuery().get(), task.getWorkDataset(), task.getWorkTable());
 		
 	    JobConfigurationQuery queryConfig = new JobConfigurationQuery();
 	    queryConfig.setQuery(task.getQuery().get());
@@ -242,17 +242,16 @@ public class BigqueryExportUtils
     	return builder.build();
     }
     
-    public static Schema extractBigqueryToGcs(PluginTask task) throws FileNotFoundException, IOException, InterruptedException{
-		Bigquery bigquery = newBigqueryClient(task);
-		
+    public static void initWorkTableWithExecuteQuery(Bigquery bigquery, PluginTask task) throws FileNotFoundException, IOException, InterruptedException{
+
 		if(task.getQuery().isPresent()){
 			task.setWorkId(generateTempTableName(task.getQuery().get()));
 			
 			if(task.getTempTable().isPresent() == false){
 				task.setTempTable(Optional.of(task.getWorkId()));
 			}
-			if(task.getTempDataset().isPresent() == false){
-				task.setTempDataset(Optional.of(task.getDataset()));
+			if(task.getTempDataset().isPresent() == false && task.getDataset().isPresent()){
+				task.setTempDataset(Optional.of(task.getDataset().get()));
 			}
 				
 			// actual target table setting
@@ -262,15 +261,18 @@ public class BigqueryExportUtils
 			// call google api
 			executeQueryToDestinationWorkTable(bigquery, task);
 			
-		}else if(task.getTable().isPresent()){
+		}else if(task.getTable().isPresent() && task.getDataset().isPresent()){
 			task.setWorkId(generateTempTableName(null, task.getTable().get()));
 			// actual target table setting			
-			task.setWorkDataset(task.getDataset());
+			task.setWorkDataset(task.getDataset().get());
 			task.setWorkTable(task.getTable().get());
 		}else{
-			throw new IOException("please insert config file [table] or [query]");
+			throw new IOException("please set config file [dataset]+[table] or [query]");
 		}
-		
+    }
+    
+    public static Schema extractWorkTable(Bigquery bigquery, PluginTask task) throws FileNotFoundException, IOException, InterruptedException{
+    	
 		Table table = bigquery.tables().get(task.getProject(), task.getWorkDataset(), task.getWorkTable()).execute();
 		
 		Schema embulkSchema = convertTableSchemaToEmbulkSchema(table);
@@ -388,10 +390,12 @@ public class BigqueryExportUtils
 		try {
 			mapper.writeValue(file, schema);
 		} catch (Exception e) {
-			log.error("error when create schema json",e);
+			log.error("error when create schema json {}",file);
+			throw new RuntimeException(e);
 		}
 	}
-    	public static String generateSchemaJson(Schema schema, String schemaType) {
+	
+    public static String generateSchemaJson(Schema schema, String schemaType) {
     		SCHEMA_TYPE tp = SCHEMA_TYPE.EMBULK;
     		if(schemaType != null) {
     			tp.valueOf(schemaType);

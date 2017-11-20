@@ -77,7 +77,6 @@ public class UnitTestInitializer
         assumeNotNull(
                       config.get(String.class, "project"),
                       config.get(String.class, "json_keyfile"),
-                      config.get(String.class, "dataset"),
                       config.get(String.class, "gcs_uri"),
                       config.get(String.class, "temp_local_path")
                       );

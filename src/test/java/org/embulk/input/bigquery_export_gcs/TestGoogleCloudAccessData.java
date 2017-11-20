@@ -22,7 +22,7 @@ public class TestGoogleCloudAccessData  extends UnitTestInitializer
     {
     	BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );
     	
-        plugin.processTransactionAndSetTask(task);
+        plugin.executeBigqueryApi(task);
         
     	InputStream ins = BigqueryExportUtils.openInputStream(task, task.getFiles().get(0));
     	

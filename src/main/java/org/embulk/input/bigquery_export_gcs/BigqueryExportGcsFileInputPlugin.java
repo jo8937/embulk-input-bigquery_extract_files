@@ -24,7 +24,10 @@ import org.embulk.spi.TransactionalFileInput;
 import org.embulk.spi.util.InputStreamTransactionalFileInput;
 import org.slf4j.Logger;
 
+import com.google.api.services.bigquery.Bigquery;
 import com.google.common.base.Optional;
+
+import io.airlift.slice.RuntimeIOException;
 
 /**
  * 
@@ -57,7 +60,8 @@ public class BigqueryExportGcsFileInputPlugin
         public String getJsonKeyfile();
         
         @Config("dataset")
-        public String getDataset();
+        @ConfigDefault("null")
+        public Optional<String> getDataset();
         
         @Config("table")
         @ConfigDefault("null")
@@ -105,7 +109,6 @@ public class BigqueryExportGcsFileInputPlugin
         public String getWriteDisposition();
 
         @Config("temp_local_path")
-        //@ConfigDefault("\"/tmp\"")
         public String getTempLocalPath();
         
         @Config("temp_schema_file_path")
@@ -153,14 +156,28 @@ public class BigqueryExportGcsFileInputPlugin
     {
         PluginTask task = config.loadConfig(PluginTask.class);
 
-        processTransactionAndSetTask(task);
+        checkLocalPath(task);
         
+        executeBigqueryApi(task);
+                
         int taskCount = task.getFiles().size();
 
         return resume(task.dump(), taskCount, control);
     }
 	
-	public void processTransactionAndSetTask(PluginTask task) {
+	public void checkLocalPath(PluginTask task){
+        File localPath = new File(task.getTempLocalPath());
+        if(localPath.exists() == false){
+        	log.error("local download path not exists : {}",localPath);
+        	log.info("create local downlaod path : {}", localPath);
+        	boolean ok = localPath.mkdirs();
+        	if(!ok){
+        		throw new RuntimeIOException(new IOException("local path create fail : " + localPath));
+        	}
+        }
+	}
+	
+	public void executeBigqueryApi(PluginTask task) {
 
         BigqueryExportUtils.parseGcsUri(task);
 
@@ -185,14 +202,21 @@ public class BigqueryExportGcsFileInputPlugin
 	
     public Schema extractBigqueryToGcs(PluginTask task){
     	try {
-    		Schema schema = BigqueryExportUtils.extractBigqueryToGcs(task);
+    		Bigquery bigquery = BigqueryExportUtils.newBigqueryClient(task);
+    		
+    		// query init or execute query
+    		BigqueryExportUtils.initWorkTableWithExecuteQuery(bigquery,task);
+    		
+    		// extract table and get schema
+    		Schema schema = BigqueryExportUtils.extractWorkTable(bigquery, task);
+    		
     		return schema;
 		} catch (IOException e) {
 			log.error("bigquery io error",e);
-			return null;
+			throw new RuntimeIOException(e);
 		} catch (InterruptedException e) {
 			log.error("bigquery job error",e);
-			return null;
+			throw new RuntimeException(e);
 		}
     }
     // usually, you have an method to create list of files
@@ -203,8 +227,8 @@ public class BigqueryExportGcsFileInputPlugin
     	try {
 			return BigqueryExportUtils.getFileListFromGcs(task);
 		} catch (IOException e) {
-			log.error("gcs error",e);
-			return null;
+			log.error("GCS api call error");
+			throw new RuntimeIOException(e);
 		}
 		
     }
