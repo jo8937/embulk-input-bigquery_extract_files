@@ -1,6 +1,6 @@
 # Google Cloud Bigquery extract file input plugin for Embulk 
 
-development version. 0.0.1
+development version. 
 
 ## Overview
 
@@ -10,7 +10,7 @@ development version. 0.0.1
 
 ### Detail
 
-Google Cloud Bigquery's table or query result export.
+Read files stored in Google Cloud Storage, that exported from Google Cloud Bigquery's table or query result.
 
 Maybe solution for very big data in bigquery.
 
