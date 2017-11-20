@@ -1,0 +1,16 @@
+*~
+/bin/
+/pkg/
+/tmp/
+*.gemspec
+.gradle/
+/classpath/
+build/
+.idea
+/.settings/
+/.metadata/
+.classpath
+.project
+/setenv.bat
+/local_config.yml
+/local_setenv.bat

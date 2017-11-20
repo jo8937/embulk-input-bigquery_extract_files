@@ -1,0 +1,18 @@
+in:
+  type: bigquery_extract_files
+  project: ppp
+  json_keyfile: jjj
+  dataset: ds1
+  #table: table1
+  query: 'select * from table1'
+  gcs_uri: gs://aaa/bbb
+  temp_dataset: ds2
+  temp_local_path: C:\Temp
+  file_format: 'NEWLINE_DELIMITED_JSON'
+  compression: 'GZIP'
+  decoders:
+  - {type: gzip}  
+  parser:
+    type: json
+out: 
+  type: stdout
