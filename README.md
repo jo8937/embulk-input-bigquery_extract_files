@@ -19,6 +19,7 @@ then just extract table to Google Cloud Storage.
 
 If you set **query** config,
 then query result save to temp table and then extracted that temp table to Google Cloud Storage uri.
+see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract
    
 ## Usage
 
@@ -35,15 +36,23 @@ embulk gem install embulk-input-bigquery_extract_files
 
 - **project**: Google Cloud Platform (gcp) project id (string, required)
 - **json_keyfile**: gcp service account's private key with json (string, required)
-- **dataset**: target datasource dataset (string, default: `null`)
-- **table**: target datasource table. either query or table are required  (string, default: `null`)
-- **query**: target datasource query. either query or table are required  (string, default: `null`)
 - **gcs_uri**: bigquery result saved uri. bucket and path names parsed from this uri.  (string, required)
+- **temp_local_path**: extract files download directory in local machine (string, required)
+
+- **dataset**: target datasource dataset (string, default: `null`)
+- **table**: target datasource table. either query or table are required. (string, default: `null`)
+- **query**: target datasource query. either query or table are required. (string, default: `null`)
+
 - **temp_dataset**: if you use **query** param, query result saved here  (string, required)
 - **temp_table**: if you use **query** param, query result saved here. if not set, plugin generate temp name (string, default: `null`)
-- **file_format**: Table extract file format. see :  (string, default: `CSV`)
-- **compression**: Table extract file compression setting. see :  (string, default: `GZIP`)
-- **temp_local_path**: extract files download directory in local machine (string, required)
+- **use_legacy_sql**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.useLegacySql (string, default: `false`)
+- **cache**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.useQueryCache (string, default: `true`)
+- **create_disposition**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.createDisposition (string, default: `CREATE_IF_NEEDED`)
+- **write_disposition**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.writeDisposition (string, default: `CREATE_IF_NEEDED`)
+
+- **file_format**: Table extract file format. see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract.destinationFormat (string, default: `CSV`)
+- **compression**: Table extract file compression setting. see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract.compression (string, default: `GZIP`)
+
 - **decoders**: embulk java-file-input plugin's default attribute. see : http://www.embulk.org/docs/built-in.html#gzip-decoder-plugin
 - **parser**: embulk java-file-input plugin's default .attribute see : http://www.embulk.org/docs/built-in.html#csv-parser-plugin
 
