@@ -12,6 +12,8 @@ development version. 0.0.1
 
 Google Cloud Bigquery's table or query result export.
 
+Maybe solution for very big data in bigquery.
+
 If you set  **table** config without **query** config, 
 then just extract table to Google Cloud Storage.
 
