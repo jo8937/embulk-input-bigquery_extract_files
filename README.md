@@ -53,8 +53,13 @@ embulk gem install embulk-input-bigquery_extract_files
 - **file_format**: Table extract file format. see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract.destinationFormat (string, default: `CSV`)
 - **compression**: Table extract file compression setting. see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract.compression (string, default: `GZIP`)
 
+- **temp_schema_file_path**: bigquery result schema file for parser. (Optional) (string, default: `null`)
+
+- **temp_schema_file_type**: default is embulk's Schema object. (Optional) (string, default: `null`)  
+
 - **decoders**: embulk java-file-input plugin's default attribute. see : http://www.embulk.org/docs/built-in.html#gzip-decoder-plugin
 - **parser**: embulk java-file-input plugin's default .attribute see : http://www.embulk.org/docs/built-in.html#csv-parser-plugin
+
 
 ## Example
 
