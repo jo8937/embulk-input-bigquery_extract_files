@@ -43,7 +43,7 @@ embulk gem install embulk-input-bigquery_extract_files
 - **table**: target datasource table. either query or table are required. (string, default: `null`)
 - **query**: target datasource query. either query or table are required. (string, default: `null`)
 
-- **temp_dataset**: if you use **query** param, query result saved here  (string, required)
+- **temp_dataset**: if you use **query** param, query result saved here  (string, default: `null`)
 - **temp_table**: if you use **query** param, query result saved here. if not set, plugin generate temp name (string, default: `null`)
 - **use_legacy_sql**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.useLegacySql (string, default: `false`)
 - **cache**: if you use **query** param, see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.query.useQueryCache (string, default: `true`)
