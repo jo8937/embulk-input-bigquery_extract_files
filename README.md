@@ -1,4 +1,4 @@
-# Bigquerycsv file input plugin for Embulk
+# Google Cloud Bigquery extract file input plugin for Embulk 
 
 development version. 0.0.1
 

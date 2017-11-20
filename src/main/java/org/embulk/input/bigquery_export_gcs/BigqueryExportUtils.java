@@ -32,6 +32,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.Bigquery.Jobs.Insert;
+import com.google.api.services.bigquery.Bigquery.Tables.Delete;
 import com.google.api.services.bigquery.BigqueryScopes;
 import com.google.api.services.bigquery.model.Job;
 import com.google.api.services.bigquery.model.JobConfiguration;
@@ -44,6 +45,7 @@ import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
+import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
 import com.google.common.base.Optional;
@@ -414,5 +416,29 @@ public class BigqueryExportUtils
     		
     }
     
+    /**
+     * 
+     * @param task
+     */
+    public static void removeTempTable(PluginTask task){
+		try {
+			log.info("Remove temp table {}.{}",task.getTempDataset().get(), task.getTempTable().get());
+			Bigquery bigquery = newBigqueryClient(task);
+			Delete del = bigquery.tables().delete(task.getProject(), task.getTempDataset().get(), task.getTempTable().get());
+			del.execute();
+		} catch (Exception e) {
+			log.error("# Remove temp table FAIL : " + task.getTempDataset().orNull() +  "." + task.getTempTable().orNull(),e);
+		}
+    }
     
+    public static void removeTempGcsFiles(PluginTask task, String file){
+		try {
+			Storage gcs = BigqueryExportUtils.newGcsClient(task);
+			Bucket bucket = gcs.buckets().get(task.getGcsBucket()).execute();
+			List<String> fileList = task.getFiles();
+			
+		} catch (Exception e) {
+			log.error("# Remove temp table FAIL : " + task.getTempDataset().orNull() +  "." + task.getTempTable().orNull(),e);
+		}
+    }
 }

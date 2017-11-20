@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.codehaus.plexus.util.StringUtils;
 import org.embulk.config.Config;
 import org.embulk.config.ConfigDefault;
 import org.embulk.config.ConfigDiff;
@@ -118,6 +119,15 @@ public class BigqueryExportGcsFileInputPlugin
         @Config("temp_schema_file_tpye")
         @ConfigDefault("null")
         public Optional<String> getTempSchemaFileType();
+        
+        
+        @Config("cleanup_gcs_files")
+        @ConfigDefault("false")
+        public boolean getCleanupGcsTempFile(); 
+        
+        @Config("cleanup_temp_table")
+        @ConfigDefault("true")
+        public boolean getCleanupTempTable(); 
         
         public List<String> getFiles();
         public void setFiles(List<String> files);
@@ -266,6 +276,14 @@ public class BigqueryExportGcsFileInputPlugin
     {
     	final PluginTask task = taskSource.loadTask(PluginTask.class);
     	
+    	// remove query temp table when exists 
+    	if(task.getCleanupTempTable() && 
+    			task.getTempTable().isPresent() && 
+    			task.getQuery().isPresent() && 
+    			task.getTempDataset().isPresent()){
+    		BigqueryExportUtils.removeTempTable(task);
+    	}
+    	
     	for(int i=0; i < successTaskReports.size(); i++){
     		TaskReport report = successTaskReports.get(i);
     		if( report.isEmpty() ){
@@ -276,9 +294,12 @@ public class BigqueryExportGcsFileInputPlugin
     			log.info("delete temp file...{}",p);
     			p.toFile().delete();
     	    	
-    			//log.info("delete temp gcs file... {} ... not now", task.getGcsUri());
+    			if(task.getCleanupGcsTempFile()){
+    				//TODO : delete temp file in gcs
+    				log.info("delete temp gcs file... {} ... not now... ", file);
+    			}
     			
-    			//log.info("delete temp table in bigquery ... {} ... not now", task.getTable());		
+    			//		
     		}else{
     			log.error("datasource not empty : {}", report);
     		}
