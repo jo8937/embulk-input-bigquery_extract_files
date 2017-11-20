@@ -46,6 +46,7 @@ import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
 import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -103,19 +104,19 @@ public class BigqueryExportUtils
     }
     
 
-    public static String queryForGetTempTable(Bigquery bigquery, PluginTask task) throws IOException, InterruptedException {
-    	String destTableName = task.getTempName(); 
-		log.info("extract query result {} : {} => {}.{} ",task.getQuery().get(), task.getDataset(), task.getTempDataset().get(), destTableName);
+    public static void executeQueryToDestinationWorkTable(Bigquery bigquery, PluginTask task) throws IOException, InterruptedException {
+
+		log.info("extract query result {} : {} => {}.{} ",task.getDataset(), task.getQuery().get(), task.getWorkDataset(), task.getWorkTable());
 		
 	    JobConfigurationQuery queryConfig = new JobConfigurationQuery();
-	    queryConfig.setUseLegacySql(task.getUseLegacySql());
-	    //queryConfig.setTableDefinitions( ImmutableMap.of("autodetect", new ExternalDataConfiguration().setAutodetect(true)));
-
 	    queryConfig.setQuery(task.getQuery().get());
-	    //queryConfig.setDefaultDataset(new DatasetReference().setProjectId(projectId).setDatasetId(dataset));
-	    queryConfig.setDestinationTable(new TableReference().setProjectId(task.getProject()).setDatasetId(task.getTempDataset().get()).setTableId(destTableName));
-	    queryConfig.setCreateDisposition("CREATE_IF_NEEDED");
-	    queryConfig.setWriteDisposition("WRITE_APPEND");
+	    queryConfig.setDestinationTable(new TableReference()
+	                                    .setProjectId(task.getProject())
+	                                    .setDatasetId(task.getWorkDataset())
+	                                    .setTableId(task.getWorkTable()));
+	    queryConfig.setUseLegacySql(task.getUseLegacySql());
+	    queryConfig.setCreateDisposition(task.getCreateDisposition());
+	    queryConfig.setWriteDisposition(task.getWriteDisposition());
 	    queryConfig.setUseQueryCache(task.getQueryCache());
 	    queryConfig.setAllowLargeResults(true);
 	    
@@ -133,8 +134,6 @@ public class BigqueryExportUtils
 		Job lastJob = waitForJob(bigquery, task.getProject(), jobId);
 		
 		log.debug("waiting for job end....... {}", lastJob.toPrettyString());
-		
-		return destTableName;
 	}
     
     public static void parseGcsUri(PluginTask task){
@@ -246,23 +245,33 @@ public class BigqueryExportUtils
     public static Schema extractBigqueryToGcs(PluginTask task) throws FileNotFoundException, IOException, InterruptedException{
 		Bigquery bigquery = newBigqueryClient(task);
 		
-		if(task.getTempDataset().isPresent() == false) {
-			task.setTempDataset(task.getDataset());
-		}
-		
 		if(task.getQuery().isPresent()){
-			task.setTempName(generateTempTableName(task.getQuery().get()));
-			String tableName = queryForGetTempTable(bigquery, task); // process query to dest table...
-			task.setWorkTable(tableName);
+			task.setWorkId(generateTempTableName(task.getQuery().get()));
+			
+			if(task.getTempTable().isPresent() == false){
+				task.setTempTable(Optional.of(task.getWorkId()));
+			}
+			if(task.getTempDataset().isPresent() == false){
+				task.setTempDataset(Optional.of(task.getDataset()));
+			}
+				
+			// actual target table setting
+			task.setWorkDataset(task.getTempDataset().get());
+			task.setWorkTable(task.getTempTable().get());
+
+			// call google api
+			executeQueryToDestinationWorkTable(bigquery, task);
+			
 		}else if(task.getTable().isPresent()){
-			task.setTempName(generateTempTableName(null, task.getTable().get()));
-			task.setTempDataset(task.getDataset());
+			task.setWorkId(generateTempTableName(null, task.getTable().get()));
+			// actual target table setting			
+			task.setWorkDataset(task.getDataset());
 			task.setWorkTable(task.getTable().get());
 		}else{
 			throw new IOException("please insert config file [table] or [query]");
 		}
 		
-		Table table = bigquery.tables().get(task.getProject(), task.getTempDataset().get(), task.getWorkTable()).execute();
+		Table table = bigquery.tables().get(task.getProject(), task.getWorkDataset(), task.getWorkTable()).execute();
 		
 		Schema embulkSchema = convertTableSchemaToEmbulkSchema(table);
 		//task.setSchame(embulkSchema);
@@ -270,7 +279,7 @@ public class BigqueryExportUtils
 
 		//Tabledata. req = bigquery.tabledata().list(projectId, dataset, table);
 		
-		log.info("start table extract [{}.{}] to {} ...", task.getTempDataset().get(), task.getWorkTable(), task.getGcsUri());
+		log.info("start table extract [{}.{}] to {} ...", task.getWorkDataset(), task.getWorkTable(), task.getGcsUri());
 		
 		Job jobReq = new Job();
 	    JobConfigurationExtract extract = new JobConfigurationExtract();

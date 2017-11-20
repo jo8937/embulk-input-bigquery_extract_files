@@ -67,10 +67,6 @@ public class BigqueryExportGcsFileInputPlugin
         @ConfigDefault("null")
         public Optional<String> getQuery();
         
-        @Config("cache")
-        @ConfigDefault("true")
-        public Boolean getQueryCache();
-        
         @Config("file_format")
         @ConfigDefault("\"CSV\"")
         public Optional<String> getFileFormat();
@@ -78,10 +74,6 @@ public class BigqueryExportGcsFileInputPlugin
         @Config("compression")
         @ConfigDefault("\"GZIP\"")
         public Optional<String> getCompression();
-        
-        @Config("use_legacy_sql")
-        @ConfigDefault("false")
-        public boolean getUseLegacySql(); 
 
         @Config("gcs_uri")
         public String getGcsUri();
@@ -89,8 +81,29 @@ public class BigqueryExportGcsFileInputPlugin
         @Config("temp_dataset")
         @ConfigDefault("null")
         public Optional<String> getTempDataset();
-        public void setTempDataset(String tempDataset);
+        public void setTempDataset(Optional<String> tempDataset);
         
+        @Config("temp_table")
+        @ConfigDefault("null")
+        public Optional<String> getTempTable();
+        public void setTempTable(Optional<String> tempTable);
+
+        @Config("cache")
+        @ConfigDefault("true")
+        public boolean getQueryCache();
+
+        @Config("use_legacy_sql")
+        @ConfigDefault("false")
+        public boolean getUseLegacySql(); 
+
+        @Config("create_disposition")
+        @ConfigDefault("\"CREATE_IF_NEEDED\"")
+        public String getCreateDisposition();
+        
+        @Config("write_disposition")
+        @ConfigDefault("\"WRITE_APPEND\"")
+        public String getWriteDisposition();
+
         @Config("temp_local_path")
         //@ConfigDefault("\"/tmp\"")
         public String getTempLocalPath();
@@ -114,12 +127,15 @@ public class BigqueryExportGcsFileInputPlugin
         
         public String getGcsBlobNamePrefix();
         public void setGcsBlobNamePrefix(String blobName);
+
+        public String getWorkDataset();
+        public void setWorkDataset(String dataset);
         
         public String getWorkTable();
         public void setWorkTable(String table);
 
-        public String getTempName();
-        public void setTempName(String temp);
+        public String getWorkId();
+        public void setWorkId(String temp);
         
         //public Schema getSchemaConfig();
         //public void setSchameConfig(SchemaConfig schema);

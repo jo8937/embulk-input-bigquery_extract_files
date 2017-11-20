@@ -1,12 +1,12 @@
 in:
   type: bigquery_extract_files
-  project: ppp
-  json_keyfile: jjj
-  dataset: ds1
-  #table: table1
-  query: 'select * from table1'
-  gcs_uri: gs://aaa/bbb
-  temp_dataset: ds2
+  project: googlecloudplatformproject
+  json_keyfile: gcp-service-account-private-key.json
+  dataset: target_dataset
+  #table: target_table
+  query: 'select a,b,c from target_table'
+  gcs_uri: gs://bucket/subdir
+  temp_dataset: temp_dataset
   temp_local_path: C:\Temp
   file_format: 'NEWLINE_DELIMITED_JSON'
   compression: 'GZIP'
