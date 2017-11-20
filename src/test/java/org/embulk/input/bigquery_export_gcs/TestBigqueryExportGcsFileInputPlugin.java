@@ -120,13 +120,8 @@ public class TestBigqueryExportGcsFileInputPlugin
     	
     	BigqueryExportUtils.parseGcsUri(task);
     	
-    	
     	assertEquals("", "aaa", task.getGcsBucket());
     	assertEquals("", "bbb/ccc_", task.getGcsBlobNamePrefix());
-    	
-    	//BlobListOption gcsPath = BlobListOption.prefix( task.getGcsBlobNamePrefix() );
-    	
-    	//log.info("{}",gcsPath);
     }
 
     @Test
