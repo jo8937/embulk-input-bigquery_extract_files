@@ -486,7 +486,7 @@ public class BigqueryExportUtils
     public static void removeTempGcsFiles(PluginTask task, String file){
 		try {
 			Storage gcs = BigqueryExportUtils.newGcsClient(task);
-			log.info("delete finish file gs://{}{}", task.getGcsBucket(), file);
+			log.info("delete finish file gs://{}/{}", task.getGcsBucket(), file);
 			gcs.objects().delete(task.getGcsBucket(), file).execute();
 		} catch (Exception e) {
 			log.error("# Remove temp gcs file FAIL : " + file,e);

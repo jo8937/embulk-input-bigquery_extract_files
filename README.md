@@ -84,6 +84,51 @@ out:
   type: stdout
 ```
 
+### Advenced Example 
+
+#### bigquery to mysql with auto-schema 
+
+I have to batch bigquery table to mysql every day for my job.
+then, I wan'to get auto-schema for this file input plugin.
+
+- see also 
+ - https://github.com/jo8937/embulk-parser-csv_with_schema_file
+ - https://github.com/embulk/embulk-output-jdbc/tree/master/embulk-output-mysql
+
+this is my best practive for bigquery to mysql batch config. 
+
+```yaml
+in:
+  type: bigquery_extract_files
+  project: my-google-project
+  json_keyfile: /tmp/embulk/google_service_account.json
+  query: 'select * from dataset.t_nitocris'
+  temp_dataset: temp_dataset
+  gcs_uri: gs://bucket/embulktemp/t_nitocris_*
+  temp_local_path: /tmp/embulk/data
+  file_format: 'CSV'
+  compression: 'GZIP'
+  temp_schema_file_path: /tmp/embulk/schema/csv_schema_nitocris.json
+  decoders:
+  - {type: gzip}
+  parser:
+    type: csv_with_schema_file
+    default_timestamp_format: '%Y-%m-%d %H:%M:%S %z'
+    schema_path: /tmp/embulk/schema/csv_schema_nitocris.json
+out:
+  type: mysql
+  host: host
+  user: user
+  password: password
+  port: 3306
+  database: MY_DATABASE
+  table: 
+  options: {connectTimeout: 0, waitTimeout: 0, enableQueryTimeouts: false, autoReconnect: true}
+  mode: insert_direct
+  retry_limit: 60
+  retry_wait: 3000
+  batch_size: 4096000
+```
 
 ## Build
 
