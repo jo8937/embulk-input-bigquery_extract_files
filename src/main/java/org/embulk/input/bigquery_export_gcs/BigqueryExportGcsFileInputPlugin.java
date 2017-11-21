@@ -1,6 +1,7 @@
 package org.embulk.input.bigquery_export_gcs;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -132,6 +133,15 @@ public class BigqueryExportGcsFileInputPlugin
         @ConfigDefault("true")
         public boolean getCleanupTempTable(); 
         
+        @Config("cleanup_gcs_before_executing")
+        @ConfigDefault("true")
+        public boolean getCleanupGcsBeforeExcuting();
+        
+        
+        @Config("start_phase")
+        @ConfigDefault("0")
+        public int getStartPhase();
+        
         public List<String> getFiles();
         public void setFiles(List<String> files);
 
@@ -156,7 +166,7 @@ public class BigqueryExportGcsFileInputPlugin
         //public Schema getSchemaConfig();
         //public void setSchameConfig(SchemaConfig schema);
     }
-    
+        
     @Override
 	public ConfigDiff guess(ConfigSource execConfig, ConfigSource inputConfig) {
 
@@ -192,20 +202,39 @@ public class BigqueryExportGcsFileInputPlugin
 	
 	public void executeBigqueryApi(PluginTask task) {
 
+		log.info("[0] Initialize Settings ... ");
+		
         BigqueryExportUtils.parseGcsUri(task);
 
-        Schema schema = extractBigqueryToGcs(task);
+        if(task.getCleanupGcsBeforeExcuting()){
+			log.info("clean up before executing. delete all file in : {}",task.getGcsUri());
+			BigqueryExportUtils.removeGcsFilesBeforeExecuting(task);	
+		}
+
+        PHASE phase = BigqueryExportUtils.initTask(task);
+        log.info("Configuration : {}",task.toString());
         
+        Bigquery bigquery = BigqueryExportUtils.newBigqueryClient(task);
+       
+        if(phase == PHASE.QUERY){
+        	log.info("[1] Query to Table");
+        	extractQueryToTable(bigquery, task);
+        	
+        }
+        log.info("[2] Table to GCS");
+        Schema schema = extractTableToGcs(bigquery, task);
         log.info("Schema : {}",schema.toString());
         
+        log.info("[3] Write Schema ");
         writeSchemaFileIfSpecified(schema, task);
         
+        log.info("[4] read file list in gcs ");
         List<String> files = listFilesOfGcs(task);
         
         task.setFiles(files);
         
 	}
-	
+		
 	public void writeSchemaFileIfSpecified(Schema schema, PluginTask task) {
 		if(task.getTempSchemaFilePath().isPresent()) {
 			log.info("generate temp {} schema file to ... {}", task.getTempSchemaFileType().or(""), task.getTempSchemaFilePath().orNull());
@@ -213,16 +242,22 @@ public class BigqueryExportGcsFileInputPlugin
         }
 	}
 	
-    public Schema extractBigqueryToGcs(PluginTask task){
-    	try {
-    		Bigquery bigquery = BigqueryExportUtils.newBigqueryClient(task);
-    		
-    		// query init or execute query
-    		BigqueryExportUtils.initWorkTableWithExecuteQuery(bigquery,task);
-    		
+	public void extractQueryToTable(Bigquery bigquery, PluginTask task){
+		try {
+    		BigqueryExportUtils.executeQueryToDestinationWorkTable(bigquery, task);
+		} catch (IOException e) {
+			log.error("bigquery io error",e);
+			throw new RuntimeIOException(e);
+		} catch (InterruptedException e) {
+			log.error("bigquery job error",e);
+			throw new RuntimeException(e);
+		}
+	}
+	
+	public Schema extractTableToGcs(Bigquery bigquery, PluginTask task){
+		try {
     		// extract table and get schema
     		Schema schema = BigqueryExportUtils.extractWorkTable(bigquery, task);
-    		
     		return schema;
 		} catch (IOException e) {
 			log.error("bigquery io error",e);
@@ -231,11 +266,12 @@ public class BigqueryExportGcsFileInputPlugin
 			log.error("bigquery job error",e);
 			throw new RuntimeException(e);
 		}
-    }
-    // usually, you have an method to create list of files
+	}
+
+	// usually, you have an method to create list of files
     List<String> listFilesOfGcs(PluginTask task)
     {
-    	log.info("get file list in to gcs of ... {}.{} -> gs://{}/{}", task.getDataset(), task.getWorkTable(),task.getGcsBucket(),task.getGcsBlobNamePrefix());
+    	log.info("get file list in to gcs of ... {}.{} -> gs://{}/{}", task.getWorkDataset(), task.getWorkTable(),task.getGcsBucket(),task.getGcsBlobNamePrefix());
     	
     	try {
 			return BigqueryExportUtils.getFileListFromGcs(task);
@@ -298,8 +334,7 @@ public class BigqueryExportGcsFileInputPlugin
     			p.toFile().delete();
     	    	
     			if(task.getCleanupGcsTempFile()){
-    				//TODO : delete temp file in gcs
-    				log.info("delete temp gcs file... {} ... not now... ", file);
+    				BigqueryExportUtils.removeTempGcsFiles(task, file);
     			}
     			
     			//		

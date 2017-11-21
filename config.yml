@@ -25,6 +25,7 @@ out:
   port: 10315
   database: dbname
   table: test_table
-  options: {connectTimeout: 200000}
+  # https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-configuration-properties.html
+  options: {connectTimeout: 0, enableQueryTimeouts: false, waitTimeout: 0}
   mode: insert_direct
   

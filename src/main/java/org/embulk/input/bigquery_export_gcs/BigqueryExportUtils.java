@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -51,6 +52,8 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import io.airlift.slice.RuntimeIOException;
 
 /**
  * 
@@ -108,7 +111,9 @@ public class BigqueryExportUtils
 
     public static void executeQueryToDestinationWorkTable(Bigquery bigquery, PluginTask task) throws IOException, InterruptedException {
 
-		log.info("extract query result {} => {}.{} ",task.getQuery().get(), task.getWorkDataset(), task.getWorkTable());
+    	log.info("execute Query to Table ");
+    	log.info("# Query # {}",task.getQuery().get());
+		log.info("# Table # {}.{} ",task.getWorkDataset(), task.getWorkTable());
 		
 	    JobConfigurationQuery queryConfig = new JobConfigurationQuery();
 	    queryConfig.setQuery(task.getQuery().get());
@@ -130,8 +135,7 @@ public class BigqueryExportUtils
 	    JobReference jobRef = jobRes.getJobReference();
 		String jobId = jobRef.getJobId();
 
-		log.info("query to Table jobId : {}",jobId);
-		log.info("waiting for job end....... ");
+		log.info("query to Table jobId : {} : waiting for job end...",jobId);
 		
 		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
 		
@@ -158,10 +162,15 @@ public class BigqueryExportUtils
      * @throws IOException 
      * @throws FileNotFoundException 
      */
-    public static Bigquery newBigqueryClient(PluginTask task) throws FileNotFoundException, IOException{
+    public static Bigquery newBigqueryClient(PluginTask task){
     	log.debug("# Starting Google BigQuery API ... ");
-    	GoogleCredentialSet set = googleCredential(task);
-		return new Bigquery.Builder(set.transport, set.jsonFactory, set.googleCredential).setApplicationName("embulk-input-bigquey-export-gcs").build();
+		try {
+			GoogleCredentialSet set = googleCredential(task);
+			return new Bigquery.Builder(set.transport, set.jsonFactory, set.googleCredential).setApplicationName("embulk-input-bigquey-export-gcs").build();
+		} catch (Exception e) {
+			throw new RuntimeException("bigquery connect fail",e);
+		}
+		
     }
 
     public static Storage newGcsClient(PluginTask task) throws FileNotFoundException, IOException{
@@ -244,7 +253,7 @@ public class BigqueryExportUtils
     	return builder.build();
     }
     
-    public static void initWorkTableWithExecuteQuery(Bigquery bigquery, PluginTask task) throws FileNotFoundException, IOException, InterruptedException{
+    public static PHASE initTask(PluginTask task) {
 
 		if(task.getQuery().isPresent()){
 			task.setWorkId(generateTempTableName(task.getQuery().get()));
@@ -259,17 +268,18 @@ public class BigqueryExportUtils
 			// actual target table setting
 			task.setWorkDataset(task.getTempDataset().get());
 			task.setWorkTable(task.getTempTable().get());
-
-			// call google api
-			executeQueryToDestinationWorkTable(bigquery, task);
 			
+			return PHASE.QUERY;
 		}else if(task.getTable().isPresent() && task.getDataset().isPresent()){
 			task.setWorkId(generateTempTableName(null, task.getTable().get()));
 			// actual target table setting			
 			task.setWorkDataset(task.getDataset().get());
 			task.setWorkTable(task.getTable().get());
+			
+			return PHASE.TABLE;
+			
 		}else{
-			throw new IOException("please set config file [dataset]+[table] or [query]");
+			throw new RuntimeException("please set config file [dataset]+[table] or [query]");
 		}
     }
     
@@ -301,7 +311,10 @@ public class BigqueryExportUtils
 		log.info("extract jobId : {}",jobId);
 		log.debug("waiting for job end....... ");
 		
-		waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
+		
+		log.info("table extract result : {}",lastJob.toPrettyString());
+		
 		return embulkSchema;
     }
 
@@ -437,14 +450,28 @@ public class BigqueryExportUtils
 		}
     }
     
+    public static void removeGcsFilesBeforeExecuting(PluginTask task){
+		try {
+			Storage gcs = BigqueryExportUtils.newGcsClient(task);
+			gcs.objects().delete(task.getGcsBucket(), task.getGcsBlobNamePrefix()).execute();
+		} catch (GoogleJsonResponseException e) {
+			if(e.getStatusCode() == 404){
+				log.info("file not found in gs://{}/{} :: it's ok ",task.getGcsBucket(), task.getGcsBlobNamePrefix());
+			}else{
+				throw new RuntimeException("# Remove GCS files gs://" + task.getGcsBucket() + "/" + task.getGcsBlobNamePrefix(),e);	
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("# Remove GCS files gs://" + task.getGcsBucket() + "/" + task.getGcsBlobNamePrefix(),e);
+		}
+    }
+    
     public static void removeTempGcsFiles(PluginTask task, String file){
 		try {
 			Storage gcs = BigqueryExportUtils.newGcsClient(task);
-			Bucket bucket = gcs.buckets().get(task.getGcsBucket()).execute();
-			List<String> fileList = task.getFiles();
-			
+			log.info("delete finish file gs://{}{}", task.getGcsBucket(), file);
+			gcs.objects().delete(task.getGcsBucket(), file).execute();
 		} catch (Exception e) {
-			log.error("# Remove temp table FAIL : " + task.getTempDataset().orNull() +  "." + task.getTempTable().orNull(),e);
+			log.error("# Remove temp gcs file FAIL : " + file,e);
 		}
     }
 }
