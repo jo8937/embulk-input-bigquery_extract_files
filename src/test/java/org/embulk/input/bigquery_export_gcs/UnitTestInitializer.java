@@ -8,16 +8,18 @@ import java.io.IOException;
 import org.embulk.EmbulkTestRuntime;
 import org.embulk.config.ConfigLoader;
 import org.embulk.config.ConfigSource;
-import org.embulk.config.DataSourceImpl;
-import org.embulk.input.bigquery_export_gcs.BigqueryExportGcsFileInputPlugin.PluginTask;
 import org.embulk.spi.Exec;
 import org.embulk.spi.FileInputRunner;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.TestPageBuilderReader.MockPageOutput;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class UnitTestInitializer
 {
@@ -81,6 +83,14 @@ public class UnitTestInitializer
                       config.get(String.class, "temp_local_path")
                       );
     }
+    
+    @Test
+    public void testInitTask(){
+    	BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );
+    	
+    	log.info("{}", BigqueryExportUtils.toPrettyString(task.dump().deepCopy().getObjectNode()) );
+    }
+    
 
 
 }

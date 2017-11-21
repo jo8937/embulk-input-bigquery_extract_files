@@ -215,6 +215,10 @@ public class BigqueryExportUtils
     	
         do {
           objects = listRequest.execute();
+          if(objects.getItems() == null){
+        	  log.error("file not found in gs://{}/{}",bucket,blobName);
+        	  return builder.build();
+          }
           for(StorageObject obj : objects.getItems()){
         	  builder.add(obj.getName());  
           }
@@ -430,9 +434,18 @@ public class BigqueryExportUtils
 			log.error("error when create schema json",e);
 			return null;
 		}
-		
     		//for(Column col : schema.getColumns()) {
-    		
+    }
+    
+    public static String toPrettyString(Object obj){
+    	try {
+    		ObjectMapper mapper = new ObjectMapper();
+			String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+			return str;
+		} catch (Exception e) {
+			log.error("JSON format error",e);
+			return java.util.Objects.toString(obj);
+		}
     }
     
     /**
@@ -452,8 +465,13 @@ public class BigqueryExportUtils
     
     public static void removeGcsFilesBeforeExecuting(PluginTask task){
 		try {
+			log.info("start cleanup gs://{}/{} ... ",task.getGcsBucket(), task.getGcsBlobNamePrefix());
 			Storage gcs = BigqueryExportUtils.newGcsClient(task);
-			gcs.objects().delete(task.getGcsBucket(), task.getGcsBlobNamePrefix()).execute();
+			List<String> fileList = getFileListFromGcs(gcs, task.getGcsBucket(), task.getGcsBlobNamePrefix());
+			for(String f : fileList){
+				log.info("cleanup gs://{}/{} ... ",task.getGcsBucket(), f);
+				gcs.objects().delete(task.getGcsBucket(), f).execute();	
+			}
 		} catch (GoogleJsonResponseException e) {
 			if(e.getStatusCode() == 404){
 				log.info("file not found in gs://{}/{} :: it's ok ",task.getGcsBucket(), task.getGcsBlobNamePrefix());

@@ -212,7 +212,7 @@ public class BigqueryExportGcsFileInputPlugin
 		}
 
         PHASE phase = BigqueryExportUtils.initTask(task);
-        log.info("Configuration : {}",task.toString());
+        log.info("[0] Settings : {}", BigqueryExportUtils.toPrettyString(task.dump().deepCopy().getObjectNode()) );
         
         Bigquery bigquery = BigqueryExportUtils.newBigqueryClient(task);
        
