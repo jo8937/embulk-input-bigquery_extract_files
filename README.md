@@ -55,11 +55,18 @@ embulk gem install embulk-input-bigquery_extract_files
 
 - **temp_schema_file_path**: bigquery result schema file for parser. (Optional) (string, default: `null`)
 
-- **temp_schema_file_type**: default is embulk's Schema object. (Optional) (string, default: `null`)  
+- **bigquery_job_wait_second**: bigquery job waiting second. (Optional) (string, default: `600`)
+
+- **cleanup_gcs_before_executing**: delete all file in gcs temp path before process start (Optional) (string, default: `true`)
+
+- **cleanup_gcs_files**: delete all file in gcs temp path after process end (Optional) (string, default: `false`)
+
+- **cleanup_temp_table**: delete query result table after process end (Optional) (string, default: `true`)
+
+- **cleanup_local_temp_files**: delete all file in local temp dir (Optional) (string, default: `true`)
 
 - **decoders**: embulk java-file-input plugin's default attribute. see : http://www.embulk.org/docs/built-in.html#gzip-decoder-plugin
 - **parser**: embulk java-file-input plugin's default .attribute see : http://www.embulk.org/docs/built-in.html#csv-parser-plugin
-
 
 ## Example
 
