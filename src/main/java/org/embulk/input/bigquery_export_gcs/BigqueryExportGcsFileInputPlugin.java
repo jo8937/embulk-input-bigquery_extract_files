@@ -127,11 +127,15 @@ public class BigqueryExportGcsFileInputPlugin
         
         @Config("cleanup_gcs_files")
         @ConfigDefault("false")
-        public boolean getCleanupGcsTempFile(); 
+        public boolean getCleanupGcsTempFiles(); 
         
         @Config("cleanup_temp_table")
         @ConfigDefault("true")
         public boolean getCleanupTempTable(); 
+        
+        @Config("cleanup_local_temp_files")
+        @ConfigDefault("true")
+        public boolean getCleanupLocalTempFiles();
         
         @Config("cleanup_gcs_before_executing")
         @ConfigDefault("true")
@@ -328,12 +332,13 @@ public class BigqueryExportGcsFileInputPlugin
     		if( report.isEmpty() ){
     			String file = task.getFiles().get(i);
     	    	
-    			Path p = BigqueryExportUtils.getFullPath(task,file);
+    			if(task.getCleanupLocalTempFiles()) {
+    				Path p = BigqueryExportUtils.getFullPath(task,file);
+        			log.info("delete temp file...{}",p);
+        			p.toFile().delete();	
+    			}
     			
-    			log.info("delete temp file...{}",p);
-    			p.toFile().delete();
-    	    	
-    			if(task.getCleanupGcsTempFile()){
+    			if(task.getCleanupGcsTempFiles()){
     				BigqueryExportUtils.removeTempGcsFiles(task, file);
     			}
     			
