@@ -137,6 +137,18 @@ out:
   batch_size: 4096000
 ```
 
+* bigquery's TIMESTAMP value format is not exactly one format in one CSV export. you can define optional 'columns' param in 'csv_with_schema_file' parser for another format like below.
+
+```yml
+...
+  parser:
+    type: csv_with_schema_file
+    default_timestamp_format: '%Y-%m-%d %H:%M:%S %z'
+    schema_path: /tmp/embulk/schema/csv_schema_nitocris.json
+    columns:
+      - {name: Date2, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%H %z'}
+```
+
 ## Build
 
 ```
