@@ -1,6 +1,12 @@
 # Google Cloud Bigquery extract file input plugin for Embulk 
 
-development version. 
+embulk file input plugin. 
+
+- embulk : http://www.embulk.org/docs/
+
+- embulk plugins : http://www.embulk.org/plugins/
+
+Read files stored in Google Cloud Storage that extracted from Google Cloud Bigquery's table or query result.
 
 ## Overview
 
