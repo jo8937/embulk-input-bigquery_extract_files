@@ -152,7 +152,7 @@ out:
     default_timestamp_format: '%Y-%m-%d %H:%M:%S %z'
     schema_path: /tmp/embulk/schema/csv_schema_nitocris.json
     columns:
-      - {name: Date2, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%H %z'}
+      - {name: Date2, type: timestamp, format: '%Y-%m-%d %H:%M:%S.%N %z'}
 ```
 
 ## Build
