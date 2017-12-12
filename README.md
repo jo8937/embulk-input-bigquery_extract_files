@@ -160,3 +160,8 @@ out:
 ```
 $ ./gradlew gem  # -t to watch change of files and rebuild continuously
 ```
+
+# Another choice
+
+This plugin useful for file-input type. but maybe so complicated to use.
+For portable use, see embulk-input-bigquery : https://github.com/medjed/embulk-input-bigquery
