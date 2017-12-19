@@ -47,8 +47,7 @@ import io.airlift.slice.RuntimeIOException;
  * @author george 2017. 11. 16.
  *
  */
-public class BigqueryExportGcsFileInputPlugin
-        implements FileInputPlugin, ConfigurableGuessInputPlugin
+public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
 {
 	private static final Logger log = Exec.getLogger(BigqueryExportGcsFileInputPlugin.class);
 	
@@ -141,6 +140,9 @@ public class BigqueryExportGcsFileInputPlugin
         @ConfigDefault("true")
         public boolean getCleanupGcsBeforeExcuting();
         
+        @Config("guess_schema")
+        @ConfigDefault("true")
+        public boolean getGuessSchema();
         
         @Config("start_phase")
         @ConfigDefault("0")
@@ -170,13 +172,6 @@ public class BigqueryExportGcsFileInputPlugin
         //public Schema getSchemaConfig();
         //public void setSchameConfig(SchemaConfig schema);
     }
-        
-    @Override
-	public ConfigDiff guess(ConfigSource execConfig, ConfigSource inputConfig) {
-
-        GuessExecutor guessExecutor = Exec.getInjector().getInstance(GuessExecutor.class);
-        return guessExecutor.guessParserConfig(null, inputConfig, execConfig);
-	}
 
 	@Override
     public ConfigDiff transaction(ConfigSource config, FileInputPlugin.Control control)

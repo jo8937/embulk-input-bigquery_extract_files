@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Date;
@@ -17,8 +18,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.embulk.input.bigquery_export_gcs.BigqueryExportGcsFileInputPlugin.PluginTask;
+import org.embulk.spi.ColumnConfig;
 import org.embulk.spi.Exec;
 import org.embulk.spi.Schema;
+import org.embulk.spi.SchemaConfig;
 import org.embulk.spi.type.Types;
 import org.slf4j.Logger;
 
@@ -33,6 +36,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.repackaged.com.google.common.base.Strings;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.Bigquery.Jobs.Insert;
+import com.google.api.services.bigquery.Bigquery.Tabledata;
 import com.google.api.services.bigquery.Bigquery.Tables.Delete;
 import com.google.api.services.bigquery.BigqueryScopes;
 import com.google.api.services.bigquery.model.Job;
@@ -41,8 +45,10 @@ import com.google.api.services.bigquery.model.JobConfigurationExtract;
 import com.google.api.services.bigquery.model.JobConfigurationQuery;
 import com.google.api.services.bigquery.model.JobReference;
 import com.google.api.services.bigquery.model.Table;
+import com.google.api.services.bigquery.model.TableDataList;
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableReference;
+import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.StorageScopes;
@@ -233,6 +239,21 @@ public class BigqueryExportUtils
 	public static final String TYPE_FLOAT = "FLOAT";
 	public static final String TYPE_TIMESTAMP = "TIMESTAMP";
 	
+	public static SchemaConfig getSchemaWithGuess(Bigquery bigquery, PluginTask task, Table table, Schema schema) throws IOException{
+		List<ColumnConfig> columns = Lists.newArrayList();
+		
+		com.google.api.services.bigquery.Bigquery.Tabledata.List req = bigquery.tabledata().list(task.getProject(), task.getDataset().get(), table.getTableReference().getTableId());
+		
+		req = req.setMaxResults(new Long(1));
+				
+		TableDataList list = req.execute();
+		
+		for(TableRow row : list.getRows()){
+			//row.get(name)
+		}
+		return new SchemaConfig(columns);
+	}
+	
     public static Schema convertTableSchemaToEmbulkSchema(Table table){
     	Schema.Builder builder = Schema.builder();
     	TableSchema ts = table.getSchema();
@@ -292,9 +313,12 @@ public class BigqueryExportUtils
 		Table table = bigquery.tables().get(task.getProject(), task.getWorkDataset(), task.getWorkTable()).execute();
 		
 		Schema embulkSchema = convertTableSchemaToEmbulkSchema(table);
+		
+		
 		//task.setSchame(embulkSchema);
+		
 		log.debug("Table Schema : {}", table.getSchema());
-
+		
 		//Tabledata. req = bigquery.tabledata().list(projectId, dataset, table);
 		
 		log.info("start table extract [{}.{}] to {} ...", task.getWorkDataset(), task.getWorkTable(), task.getGcsUri());
