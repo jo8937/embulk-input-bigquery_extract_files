@@ -393,7 +393,7 @@ public class BigqueryExportUtils
         	log.info("Start download : gs://{}/{} ...to ... {} ",task.getGcsBucket(), file, task.getTempLocalPath());
         	
     	    Storage.Objects.Get getObject = gcs.objects().get(task.getGcsBucket(), file);
-    	    getObject.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+    	    getObject.getMediaHttpDownloader().setDirectDownloadEnabled( task.getDirectDownloadEnabled() );
     	     
     	    // return getObject.executeMediaAsInputStream() // direct InputStream ?? I Think this is faster then temp file. but ...
     	    

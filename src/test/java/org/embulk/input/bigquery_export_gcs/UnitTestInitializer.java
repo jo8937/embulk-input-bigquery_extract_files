@@ -83,7 +83,8 @@ public class UnitTestInitializer
                       config.get(String.class, "temp_local_path")
                       );
     }
-    
+
+
     @Test
     public void testInitTask(){
     	BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );

@@ -13,11 +13,6 @@ public class TestGoogleCloudAccessData  extends UnitTestInitializer
 	private static final Logger log = LoggerFactory.getLogger(TestGoogleCloudAccessData.class);
 
     @Test
-    public void envTest(){
-    	log.info("{}",System.getenv("GCP_PROJECT"));
-    }
-
-    @Test
     public void testGcsInputStreamOpen() throws FileNotFoundException, IOException
     {
     	BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );

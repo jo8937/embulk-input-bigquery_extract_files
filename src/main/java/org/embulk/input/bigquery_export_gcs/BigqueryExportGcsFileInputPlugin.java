@@ -168,7 +168,11 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
 
         public String getWorkId();
         public void setWorkId(String temp);
-        
+
+
+        @Config("direct_download_enabled")
+        @ConfigDefault("false")
+        public boolean getDirectDownloadEnabled();
         //public Schema getSchemaConfig();
         //public void setSchameConfig(SchemaConfig schema);
     }
