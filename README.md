@@ -71,6 +71,8 @@ embulk gem install embulk-input-bigquery_extract_files
 
 - **cleanup_local_temp_files**: delete all file in local temp dir (Optional) (string, default: `true`)
 
+- **direct_download_enabled**: gcs download option. see : https://developers.google.com/api-client-library/java/google-api-java-client/reference/1.19.1/com/google/api/client/googleapis/media/MediaHttpDownloader#setDirectDownloadEnabled(boolean)  (Optional) (string, default: `false`)
+
 - **decoders**: embulk java-file-input plugin's default attribute. see : http://www.embulk.org/docs/built-in.html#gzip-decoder-plugin
 - **parser**: embulk java-file-input plugin's default .attribute see : http://www.embulk.org/docs/built-in.html#csv-parser-plugin
 
