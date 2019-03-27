@@ -13,7 +13,7 @@ configurations {
     provided
 }
 
-version = "0.0.10"
+version = "0.0.11"
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -22,11 +22,12 @@ dependencies {
     compile ("org.embulk:embulk-core:0.8.36")
     provided("org.embulk:embulk-core:0.8.36")
     
-    compile "com.google.http-client:google-http-client-jackson2:1.21.0"
+    compile "com.google.guava:guava:16+"
+    compile "com.google.http-client:google-http-client-jackson2:1.28.0"
     //compile ('com.google.apis:google-api-services-bigquery:v2-rev363-1.23.0') {exclude module: "guava-jdk5"}
-    compile ('com.google.apis:google-api-services-bigquery:v2-rev402-1.25.0') {exclude module: "guava-jdk5"}
+    compile ('com.google.apis:google-api-services-bigquery:v2-rev429-1.25.0') {exclude module: "guava-jdk5"}
     //compile ("com.google.apis:google-api-services-storage:v1-rev59-1.21.0") {exclude module: "guava-jdk5"}
-    compile ("com.google.apis:google-api-services-storage:v1-rev136-1.25.0") {exclude module: "guava-jdk5"}
+    compile ("com.google.apis:google-api-services-storage:v1-rev150-1.25.0") {exclude module: "guava-jdk5"}
     
     testCompile "junit:junit:4.+"
     testCompile "org.embulk:embulk-core:0.8.36:tests"
