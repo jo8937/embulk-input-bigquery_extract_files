@@ -33,7 +33,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.Bigquery.Jobs.Insert;
 import com.google.api.services.bigquery.Bigquery.Tabledata;
@@ -143,7 +143,7 @@ public class BigqueryExportUtils
 
 		log.info("query to Table jobId : {} : waiting for job end...",jobId);
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get());
 		
 		log.debug("waiting for job end....... {}", lastJob.toPrettyString());
 	}
@@ -339,21 +339,21 @@ public class BigqueryExportUtils
 		log.info("extract jobId : {}",jobId);
 		log.debug("waiting for job end....... ");
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getBigqueryJobWaitingSecond().get());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get());
 		
 		log.info("table extract result : {}",lastJob.toPrettyString());
 		
 		return embulkSchema;
     }
 
-    public static Job waitForJob(Bigquery bigquery, String project, String jobId, int bigqueryJobWaitingSecond) throws IOException, InterruptedException{
+    public static Job waitForJob(Bigquery bigquery, String project, String jobId, String location, int bigqueryJobWaitingSecond) throws IOException, InterruptedException{
     	int maxAttempts = bigqueryJobWaitingSecond;
 		int initialRetryDelay = 1000; // ms
 		Job pollingJob = null;	
 		log.info("waiting for job end : {}",jobId);
 		int tryCnt = 0;
         for (tryCnt=0; tryCnt < maxAttempts; tryCnt++){
-            pollingJob = bigquery.jobs().get(project, jobId).execute();
+            pollingJob = bigquery.jobs().get(project, jobId).setLocation(location).execute();
             String state = pollingJob.getStatus().getState();
             log.debug("Job Status {} : {}",jobId, state);
             

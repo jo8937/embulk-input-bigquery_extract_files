@@ -60,6 +60,10 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         @Config("json_keyfile")
         public String getJsonKeyfile();
         
+        @Config("location")
+        @ConfigDefault("\"US\"")
+        public Optional<String> getLocation();
+
         @Config("dataset")
         @ConfigDefault("null")
         public Optional<String> getDataset();
