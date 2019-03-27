@@ -42,6 +42,7 @@ embulk gem install embulk-input-bigquery_extract_files
 
 - **project**: Google Cloud Platform (gcp) project id (string, required)
 - **json_keyfile**: gcp service account's private key with json (string, required)
+- **location**: location of bigquery dataset and temp_dataset. see : https://cloud.google.com/bigquery/docs/locations (Optional) (string, default: `US`)
 - **gcs_uri**: bigquery result saved uri. bucket and path names parsed from this uri.  (string, required)
 - **temp_local_path**: extract files download directory in local machine (string, required)
 
