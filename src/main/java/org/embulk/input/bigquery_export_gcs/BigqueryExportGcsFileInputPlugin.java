@@ -1,9 +1,6 @@
 package org.embulk.input.bigquery_export_gcs;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -28,8 +25,6 @@ import org.slf4j.Logger;
 
 import com.google.api.services.bigquery.Bigquery;
 import com.google.common.base.Optional;
-
-import io.airlift.slice.RuntimeIOException;
 
 /**
  * 
@@ -202,7 +197,7 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         	log.info("create local downlaod path : {}", localPath);
         	boolean ok = localPath.mkdirs();
         	if(!ok){
-        		throw new RuntimeIOException(new IOException("local path create fail : " + localPath));
+        		throw new UncheckedIOException (new IOException("local path create fail : " + localPath));
         	}
         }
 	}
@@ -254,7 +249,7 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
     		BigqueryExportUtils.executeQueryToDestinationWorkTable(bigquery, task);
 		} catch (IOException e) {
 			log.error("bigquery io error",e);
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException(e);
 		} catch (InterruptedException e) {
 			log.error("bigquery job error",e);
 			throw new RuntimeException(e);
@@ -268,7 +263,7 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
     		return schema;
 		} catch (IOException e) {
 			log.error("bigquery io error",e);
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException (e);
 		} catch (InterruptedException e) {
 			log.error("bigquery job error",e);
 			throw new RuntimeException(e);
@@ -284,7 +279,7 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
 			return BigqueryExportUtils.getFileListFromGcs(task);
 		} catch (IOException e) {
 			log.error("GCS api call error");
-			throw new RuntimeIOException(e);
+			throw new UncheckedIOException (e);
 		}
 		
     }

@@ -59,8 +59,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import io.airlift.slice.RuntimeIOException;
-
 /**
  * 
  * 
