@@ -122,7 +122,8 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         @Config("bigquery_job_wait_second")
         @ConfigDefault("600")
         public Optional<Integer> getBigqueryJobWaitingSecond();
-        
+        public void setBigqueryJobWaitingSecond(Optional<Integer> second);
+
         @Config("cleanup_gcs_files")
         @ConfigDefault("false")
         public boolean getCleanupGcsTempFiles(); 
@@ -174,6 +175,16 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         public boolean getDirectDownloadEnabled();
         //public Schema getSchemaConfig();
         //public void setSchameConfig(SchemaConfig schema);
+
+        /**
+         * 2020.11.16 sometimes, bigquery extract job just very slow. not becouse of error. then workflow must throw exception for alert message
+         * @return
+         */
+        @Config("throw_bigquery_job_wait_timeout")
+        @ConfigDefault("false")
+        public boolean getThrowBigqueryJobWaitTimeout();
+        public void setThrowBigqueryJobWaitTimeout(boolean toThrow);
+
     }
 
 	@Override

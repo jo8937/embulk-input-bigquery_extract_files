@@ -1,11 +1,6 @@
 package org.embulk.input.bigquery_export_gcs;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -141,7 +136,7 @@ public class BigqueryExportUtils
 
 		log.info("query to Table jobId : {} : waiting for job end...",jobId);
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout());
 		
 		log.debug("waiting for job end....... {}", lastJob.toPrettyString());
 	}
@@ -220,7 +215,10 @@ public class BigqueryExportUtils
         do {
           objects = listRequest.execute();
           if(objects.getItems() == null){
-        	  log.error("file not found in gs://{}/{}",bucket,blobName);
+
+          	  String errorMessage = String.format("file not found in gs://%s/%s",bucket,blobName);
+			  log.error(errorMessage);
+
         	  return builder.build();
           }
           for(StorageObject obj : objects.getItems()){
@@ -337,14 +335,14 @@ public class BigqueryExportUtils
 		log.info("extract jobId : {}",jobId);
 		log.debug("waiting for job end....... ");
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout());
 		
 		log.info("table extract result : {}",lastJob.toPrettyString());
 		
 		return embulkSchema;
     }
 
-    public static Job waitForJob(Bigquery bigquery, String project, String jobId, String location, int bigqueryJobWaitingSecond) throws IOException, InterruptedException{
+    public static Job waitForJob(Bigquery bigquery, String project, String jobId, String location, int bigqueryJobWaitingSecond, boolean exceptionWhenTimeout) throws IOException, InterruptedException{
     	int maxAttempts = bigqueryJobWaitingSecond;
 		int initialRetryDelay = 1000; // ms
 		Job pollingJob = null;	
@@ -358,11 +356,19 @@ public class BigqueryExportUtils
             if (pollingJob.getStatus().getState().equals("DONE")) {
                 break;
             }
-            log.info("waiting {} ... ",tryCnt);
+            log.info("waiting {} ... {} ", tryCnt,state);
             Thread.sleep(initialRetryDelay);
         }
-        if(tryCnt + 1 == maxAttempts){
-        	log.error("Bigquery Job Waiting exceed : over {} second...", bigqueryJobWaitingSecond);
+        if(tryCnt + 1 >= maxAttempts){
+
+        	// TODO : throw Exception When Extract Time Over
+			String errorMessage = String.format("Bigquery Job [%s] Waiting timeout : over %s second...", jobId, bigqueryJobWaitingSecond);
+			if(exceptionWhenTimeout){
+				throw new IOException(errorMessage);
+			}else{
+				log.error(errorMessage);
+			}
+
         }
         
         return pollingJob;
