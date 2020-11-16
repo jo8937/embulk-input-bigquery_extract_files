@@ -26,6 +26,7 @@ then just extract table to Google Cloud Storage.
 If you set **query** config,
 then query result save to temp table and then extracted that temp table to Google Cloud Storage uri.
 see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuration.extract
+      
    
 ## Usage
 
@@ -34,6 +35,13 @@ see : https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs#configuratio
 ```bash
 embulk gem install embulk-input-bigquery_extract_files
 ```
+
+### Update plugin (latest version : 0.0.13)
+
+```bash
+embulk gem update embulk-input-bigquery_extract_files
+```
+
 
 * rubygem url : https://rubygems.org/profiles/jo8937
 
@@ -63,6 +71,8 @@ embulk gem install embulk-input-bigquery_extract_files
 - **temp_schema_file_path**: bigquery result schema file for parser. (Optional) (string, default: `null`)
 
 - **bigquery_job_wait_second**: bigquery job waiting second. (Optional) (string, default: `600`)
+
+- **throw_bigquery_job_wait_timeout**: throw exception when bigquery job waiting second timeout. (Optional) (boolean, default: `false`)
 
 - **cleanup_gcs_before_executing**: delete all file in gcs temp path before process start (Optional) (string, default: `true`)
 
