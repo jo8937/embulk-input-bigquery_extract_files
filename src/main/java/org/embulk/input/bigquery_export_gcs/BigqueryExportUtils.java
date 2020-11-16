@@ -361,7 +361,6 @@ public class BigqueryExportUtils
         }
         if(tryCnt + 1 >= maxAttempts){
 
-        	// TODO : throw Exception When Extract Time Over
 			String errorMessage = String.format("Bigquery Job [%s] Waiting timeout : over %s second...", jobId, bigqueryJobWaitingSecond);
 			if(exceptionWhenTimeout){
 				throw new IOException(errorMessage);
