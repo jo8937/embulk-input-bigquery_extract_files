@@ -16,9 +16,9 @@ Reads files stored on Google Cloud Storage that extracted from bigquery table or
 
 ### Detail
 
-Read files stored in Google Cloud Storage, that exported from Google Cloud Bigquery's table or query result.
+Reads files stored on Google Cloud Storage that extracted from bigquery table or query result
 
-Maybe solution for very big data in bigquery.
+Maybe solution for download very big data in bigquery.
 
 If you set  **table** config without **query** config, 
 then just extract table to Google Cloud Storage.
