@@ -42,7 +42,6 @@ embulk gem install embulk-input-bigquery_extract_files
 embulk gem update embulk-input-bigquery_extract_files
 ```
 
-
 * rubygem url : https://rubygems.org/profiles/jo8937
 
 
@@ -173,6 +172,20 @@ out:
 ```
 $ ./gradlew gem  # -t to watch change of files and rebuild continuously
 ```
+
+
+## Plugin maintenance 
+
+for old version user
+
+### Remove plugin specific version 
+
+```bash
+embulk gem uninstall embulk-input-bigquery_extract_files --version 0.0.13
+```
+
+* rubygem url : https://rubygems.org/profiles/jo8937
+
 
 # Another choice
 
