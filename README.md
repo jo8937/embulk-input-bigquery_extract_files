@@ -4,7 +4,7 @@ embulk file input plugin.
 
 - embulk : http://www.embulk.org/docs/
 
-- embulk plugins : http://www.embulk.org/plugins/
+- embulk plugins : https://plugins.embulk.org/
 
 Read files stored in Google Cloud Storage that extracted from Google Cloud Bigquery's table or query result.
 
