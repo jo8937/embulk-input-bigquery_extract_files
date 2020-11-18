@@ -70,7 +70,8 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         @Config("query")
         @ConfigDefault("null")
         public Optional<String> getQuery();
-        
+        public void setQuery(Optional<String> tempDataset);
+
         @Config("file_format")
         @ConfigDefault("\"CSV\"")
         public Optional<String> getFileFormat();
@@ -185,6 +186,17 @@ public class BigqueryExportGcsFileInputPlugin implements FileInputPlugin
         public boolean getThrowBigqueryJobWaitTimeout();
         public void setThrowBigqueryJobWaitTimeout(boolean toThrow);
 
+        /**
+         * 2020.11.18 sometime, bigquery job return "DONE" but include errors.
+         * DONE does not mean job success.
+         * https://cloud.google.com/bigquery/docs/running-jobs#bigquery_create_job-java
+         *
+         * @return
+         */
+        @Config("throw_bigquery_job_includes_error")
+        @ConfigDefault("false")
+        public boolean getThrowBigqueryJobIncludesError();
+        public void setThrowBigqueryJobIncludesError(boolean toThrow);
     }
 
 	@Override

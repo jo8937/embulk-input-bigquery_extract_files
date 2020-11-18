@@ -29,6 +29,21 @@ public class TestGoogleCloudAccessData  extends UnitTestInitializer
 
 
     @Test(expected=Exception.class)
+    public void testJobDoneButError() throws FileNotFoundException, IOException
+    {
+        BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );
+        task.setThrowBigqueryJobWaitTimeout(true);
+        task.setThrowBigqueryJobIncludesError(true);
+        //task.setQuery( task.getQuery().get(). );
+        plugin.executeBigqueryApi(task);
+
+        InputStream ins = BigqueryExportUtils.openInputStream(task, task.getFiles().get(0));
+        log.info("file size : {}",org.apache.commons.compress.utils.IOUtils.toByteArray(ins).length);
+
+    }
+
+
+    @Test(expected=Exception.class)
     public void testJobWaitTimeout() throws FileNotFoundException, IOException
     {
         BigqueryExportGcsFileInputPlugin.PluginTask task = config.loadConfig(BigqueryExportGcsFileInputPlugin.PluginTask.class );

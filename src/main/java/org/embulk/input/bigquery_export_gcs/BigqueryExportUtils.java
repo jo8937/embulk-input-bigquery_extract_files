@@ -4,6 +4,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -136,7 +137,7 @@ public class BigqueryExportUtils
 
 		log.info("query to Table jobId : {} : waiting for job end...",jobId);
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout(), task.getThrowBigqueryJobIncludesError());
 		
 		log.debug("waiting for job end....... {}", lastJob.toPrettyString());
 	}
@@ -335,14 +336,14 @@ public class BigqueryExportUtils
 		log.info("extract jobId : {}",jobId);
 		log.debug("waiting for job end....... ");
 		
-		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout());
+		Job lastJob = waitForJob(bigquery, task.getProject(), jobId, task.getLocation().get(), task.getBigqueryJobWaitingSecond().get(), task.getThrowBigqueryJobWaitTimeout(), task.getThrowBigqueryJobIncludesError());
 		
 		log.info("table extract result : {}",lastJob.toPrettyString());
 		
 		return embulkSchema;
     }
 
-    public static Job waitForJob(Bigquery bigquery, String project, String jobId, String location, int bigqueryJobWaitingSecond, boolean exceptionWhenTimeout) throws IOException, InterruptedException{
+    public static Job waitForJob(Bigquery bigquery, String project, String jobId, String location, int bigqueryJobWaitingSecond, boolean exceptionWhenTimeout, boolean exceptionWhenErrorResult) throws IOException, InterruptedException{
     	int maxAttempts = bigqueryJobWaitingSecond;
 		int initialRetryDelay = 1000; // ms
 		Job pollingJob = null;	
@@ -352,9 +353,16 @@ public class BigqueryExportUtils
             pollingJob = bigquery.jobs().get(project, jobId).setLocation(location).execute();
             String state = pollingJob.getStatus().getState();
             log.debug("Job Status {} : {}",jobId, state);
-            
+
+			// 2020-11-18  DONE is not means "no error" then, we must handle it explictly
+			if(exceptionWhenErrorResult){
+				if(pollingJob.getStatus().getErrorResult() != null){
+					throw new IOException(pollingJob.getStatus().getErrorResult().getMessage());
+				}
+			}
+
             if (pollingJob.getStatus().getState().equals("DONE")) {
-                break;
+            	break;
             }
             log.info("waiting {} ... {} ", tryCnt,state);
             Thread.sleep(initialRetryDelay);
