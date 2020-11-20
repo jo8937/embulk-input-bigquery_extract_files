@@ -73,6 +73,8 @@ embulk gem update embulk-input-bigquery_extract_files
 
 - **throw_bigquery_job_wait_timeout**: throw exception when bigquery job waiting second timeout. (Optional) (string, default: `false`)
 
+- **throw_bigquery_job_includes_error**: throw exception when bigquery job DONE but include **errorResult** (Optional) (string, default: `false`)
+
 - **cleanup_gcs_before_executing**: delete all file in gcs temp path before process start (Optional) (string, default: `true`)
 
 - **cleanup_gcs_files**: delete all file in gcs temp path after process end (Optional) (string, default: `false`)
